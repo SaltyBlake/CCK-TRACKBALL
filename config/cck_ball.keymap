@@ -27,7 +27,7 @@
 &soft_off { hold-time-ms = <2000>; };
 
 / {
-    // 上下滚动编码器行为
+    // Vertical scroll encoder behavior
     scroll_vertical_encoder: scroll_vertical_encoder {
         compatible = "zmk,behavior-sensor-rotate";
         #sensor-binding-cells = <0>;
@@ -35,7 +35,7 @@
         tap-ms = <100>;
     };
 
-    // 左右滚动编码器行为
+    // Horizontal scroll encoder behavior
     scroll_horizontal_encoder: scroll_horizontal_encoder {
         compatible = "zmk,behavior-sensor-rotate";
         #sensor-binding-cells = <0>;
@@ -87,27 +87,4 @@
 
         scroll-layers {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-            >;
-
-            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_UP PG_DN>;
-        };
-
-        snipe-layers {
-            bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-            >;
-
-            sensor-bindings = <&scroll_vertical_encoder>,   // 编码器1：上下滚动
-                             <&scroll_horizontal_encoder>;  // 编码器2：左右滚动
-        };
-    };
-};
+&trans  &
