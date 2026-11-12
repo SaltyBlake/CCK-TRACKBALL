@@ -1,11 +1,11 @@
 #include <physical_layouts.dtsi>
 
 / {
-        cck_ball_layouts: cck_ball_layouts {
+    cck_ball_layouts: cck_ball_layouts {
         compatible = "zmk,physical-layout";
         display-name = "CCK BALL Wireless";
         transform = <&default_transform>;
-          keys  //                  w   h     x    y      rot    rx    ry
+        keys  //                    w   h     x    y      rot    rx    ry
             = <&key_physical_attrs 100 100    0   38       0     0     0>
             , <&key_physical_attrs 100 100  100   38       0     0     0>
             , <&key_physical_attrs 100 100  200   13       0     0     0>
