@@ -3,39 +3,41 @@
  *
  * SPDX-License-Identifier: MIT
  */
- 
+
 #include "cck_ball.dtsi"
+#include <input/processors.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
 
 &default_transform {
     col-offset = <6>;
-}; 
+};
 
 &kscan0 {
-	col-gpios
-		= <&gpio1 15 GPIO_ACTIVE_HIGH>
+    col-gpios
+        = <&gpio1 15 GPIO_ACTIVE_HIGH>
         , <&gpio0 9 GPIO_ACTIVE_HIGH>
         , <&gpio0 10 GPIO_ACTIVE_HIGH>
         , <&gpio1 11 GPIO_ACTIVE_HIGH>
         , <&gpio1 4 GPIO_ACTIVE_HIGH>
         , <&gpio1 6 GPIO_ACTIVE_HIGH>
-		;
+        ;
 };
 
-// trackball
+// Trackball SPI0
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
             psels = <NRF_PSEL(SPIM_SCK, 0, 8)>,
-                <NRF_PSEL(SPIM_MOSI, 0, 17)>,
-                <NRF_PSEL(SPIM_MISO, 0, 17)>;
+                    <NRF_PSEL(SPIM_MOSI, 0, 17)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 17)>;
         };
     };
 
     spi0_sleep: spi0_sleep {
         group1 {
             psels = <NRF_PSEL(SPIM_SCK, 0, 8)>,
-                <NRF_PSEL(SPIM_MOSI, 0, 17)>,
-                <NRF_PSEL(SPIM_MISO, 0, 17)>;
+                    <NRF_PSEL(SPIM_MOSI, 0, 17)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 17)>;
             low-power-enable;
         };
     };
@@ -51,69 +53,77 @@
 
     trackball: trackball@0 {
         status = "okay";
-        compatible = "pixart,pmw3610";
+        compatible = "pixart,pmw3610-alt";
         reg = <0>;
         spi-max-frequency = <2000000>;
         irq-gpios = <&gpio0 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-        scroll-layers = <3>;
-        snipe-layers = <4>;
-      // automouse-layer = <3>;
+
+        /* Was CONFIG_PMW3610_CPI=400 / CPI_DIVIDOR=1 */
+        cpi = <400>;
+
+        /*
+         * Was CONFIG_PMW3610_ORIENTATION_270 + CONFIG_PMW3610_INVERT_X.
+         * These three flags are my best translation of that. If the ball moves the
+         * cursor in the wrong direction, toggle these lines (see README, "Tuning").
+         */
+        swap-xy;
+        invert-x;
+        invert-y;
+
+        evt-type = <INPUT_EV_REL>;
+        x-input-code = <INPUT_REL_X>;
+        y-input-code = <INPUT_REL_Y>;
     };
 };
-
-
-//RGB bus
-&pinctrl {
-    spi3_default: spi3_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
-        };
-    };
-
-    spi3_sleep: spi3_sleep {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
-            low-power-enable;
-        };
-    };
-};
-
-&spi3 {
-    compatible = "nordic,nrf-spim";
-    status = "okay";
-
-    pinctrl-0 = <&spi3_default>;
-    pinctrl-1 = <&spi3_sleep>;
-    pinctrl-names = "default", "sleep";
-
-    led_strip: ws2812@0 {
-        compatible = "worldsemi,ws2812-spi";
-
-        /* SPI */
-        reg = <0>; /* ignored, but necessary for SPI bindings */
-        spi-max-frequency = <4000000>;
-
-        /* WS2812 */
-        chain-length = <27>; /* number of LEDs */
-        spi-one-frame = <0x70>;
-        spi-zero-frame = <0x40>;
-        color-mapping = <LED_COLOR_ID_GREEN
-                         LED_COLOR_ID_RED
-                         LED_COLOR_ID_BLUE>;
-    };
-};
-
-
 
 / {
-    trackball_listener {
+    /*
+     * Scroll scalers with remainder tracking, so slowing the ball down for scrolling
+     * does not lose small movements (which would make scrolling feel dead/jumpy).
+     */
+    input_processors {
+        zip_wheel_scaler_tr: zip_wheel_scaler_tr {
+            compatible = "zmk,input-processor-scaler";
+            #input-processor-cells = <2>;
+            type = <INPUT_EV_REL>;
+            codes = <INPUT_REL_WHEEL>;
+            track-remainders;
+        };
+
+        zip_hwheel_scaler_tr: zip_hwheel_scaler_tr {
+            compatible = "zmk,input-processor-scaler";
+            #input-processor-cells = <2>;
+            type = <INPUT_EV_REL>;
+            codes = <INPUT_REL_HWHEEL>;
+            track-remainders;
+        };
+    };
+
+    trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
+
+        /* Layer 3 (hold F): ball movement becomes mouse-wheel notches.
+           "1 16" = 1 notch per 16 counts of ball movement. Raise the 16 (max 16 per
+           stage) or add a second scaler to slow it further; lower it to speed up. */
+        scroll {
+            layers = <3>;
+            input-processors = <
+                &zip_xy_to_scroll_mapper
+                &zip_wheel_scaler_tr 1 16
+                &zip_hwheel_scaler_tr 1 16
+            >;
+        };
+
+        /* Layer 4: slow, precise pointer (no key currently switches to this layer). */
+        snipe {
+            layers = <4>;
+            input-processors = <&zip_xy_scaler 1 2>;
+        };
     };
 };
 
-// enable right encoder
+// Enable right encoder
 &right_encoder {
-	status = "okay";
+    status = "okay";
 };
-
