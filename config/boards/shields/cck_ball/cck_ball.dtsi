@@ -1,6 +1,13 @@
 #include <dt-bindings/zmk/matrix_transform.h>
-#include <dt-bindings/led/led.h>
 #include "cck_ball-layouts.dtsi"
+
+/*
+ * Matrix columns use P0.09 and P0.10, which are the nRF52840 NFC pins.
+ * On Zephyr 4.1 (ZMK main) they must be released to GPIO in devicetree.
+ */
+&uicr {
+    nfct-pins-as-gpios;
+};
 
 / {
     chosen {
@@ -9,78 +16,57 @@
     };
 
     default_transform: keymap_transform_0 {
-		compatible = "zmk,matrix-transform";
+        compatible = "zmk,matrix-transform";
         columns = <12>;
         rows = <5>;
 
         map = <
-			  RC(0,5) RC(0,4) RC(0,3) RC(0,2) RC(0,1) RC(0,0)                   RC(0,6) RC(0,7) RC(0,8) RC(0,9) RC(0,10) RC(0,11)
-			  RC(1,5) RC(1,4) RC(1,3) RC(1,2) RC(1,1) RC(1,0)                   RC(1,6) RC(1,7) RC(1,8) RC(1,9) RC(1,10) RC(1,11)
-			  RC(2,5) RC(2,4) RC(2,3) RC(2,2) RC(2,1) RC(2,0)                   RC(2,6) RC(2,7) RC(2,8) RC(2,9) RC(2,10) RC(2,11)
-			  RC(3,5) RC(3,4) RC(3,3) RC(3,2) RC(3,1) RC(3,0)                   RC(3,6) RC(3,7) RC(3,8) RC(3,9) RC(3,10) RC(3,11)
-			  RC(4,5) RC(4,4) RC(4,3) RC(4,2) RC(4,1) RC(4,0)                   RC(4,6) RC(4,7) RC(4,8) RC(4,9) RC(4,10) RC(4,11) 
+              RC(0,5) RC(0,4) RC(0,3) RC(0,2) RC(0,1) RC(0,0)                   RC(0,6) RC(0,7) RC(0,8) RC(0,9) RC(0,10) RC(0,11)
+              RC(1,5) RC(1,4) RC(1,3) RC(1,2) RC(1,1) RC(1,0)                   RC(1,6) RC(1,7) RC(1,8) RC(1,9) RC(1,10) RC(1,11)
+              RC(2,5) RC(2,4) RC(2,3) RC(2,2) RC(2,1) RC(2,0)                   RC(2,6) RC(2,7) RC(2,8) RC(2,9) RC(2,10) RC(2,11)
+              RC(3,5) RC(3,4) RC(3,3) RC(3,2) RC(3,1) RC(3,0)                   RC(3,6) RC(3,7) RC(3,8) RC(3,9) RC(3,10) RC(3,11)
+              RC(4,5) RC(4,4) RC(4,3) RC(4,2) RC(4,1) RC(4,0)                   RC(4,6) RC(4,7) RC(4,8) RC(4,9) RC(4,10) RC(4,11)
         >;
     };
 
-    
-	
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
-        label = "KSCAN";
 
         diode-direction = "col2row";
-		row-gpios
+        row-gpios
             = <&gpio0 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&gpio1  0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&gpio0 24 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-	        , <&gpio0 22 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-	        , <&gpio1 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 22 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio1 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             ;
-
-    
-	 /* encoders */
-        /* 信号过滤都在驱动里给了默认值，此处无需配置（要覆盖再显式写对应属性）：
-         *   filter-reverse-guard-us=800  反向信号判为毛刺的时间窗
-         *   filter-reverse-as-codir=0    毛刺是否当正向补发（本轮先关）
-         *   filter-codir-guard-us=3000   推断式补发(codir + 2 步跳变)的最小间隔，防一格连发
-         *   filter-jump-compensate=1     2 步跳变按当前方向补偿丢失的一格 */
-
-        left_encoder: encoder_left {
-            compatible = "alps,ec11";
-            status = "disabled";
-            label = "LEFT_ENCODER";
-            a-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-            b-gpios = <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-            steps = <24>;   /* 数一下转动一周有多少格 */
-            pulses-per-detent = <2>;  /* 每转动一格编码器发几个信号 - 这个就来源于qmk，原版zmk只能是1，现在用的编码器是2，有些编码器是4 */
-            /* filter-reverse-guard-us = <800>;  过滤转动过程中出现的反向信号毛刺时间窗口，默认值就是800，关闭需要显式设置为0 */
-            /* filter-reverse-as-codir = <0>;  转动过程中出现的反向信号毛刺处理为正向信号，现在默认值是0 - 关闭 */
-            /* filter-codir-guard-us = <3000>;  转动过程中抑制快速连续出现的正向信号的时间窗口，默认值是3000，关闭需要显式设置为0 */
-            /* filter-jump-compensate = <1>;  连续出现的中间信号处理为转动信号 — 这个就是为了处理之前转动2格才动1次的问题，默认值是1，关闭需要显式设置为0 */
-        };
-
-        right_encoder: encoder_right {
-            compatible = "alps,ec11";
-            status = "disabled";
-            label = "RIGHT_ENCODER";
-            a-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-            b-gpios = <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-            steps = <24>;
-            pulses-per-detent = <2>;  /* 每转动一格编码器发几个信号 - 这个就来源于qmk，原版zmk只能是1，现在用的编码器是2，有些编码器是4 */
-            /* filter-reverse-guard-us = <800>;  过滤转动过程中出现的反向信号毛刺时间窗口，默认值就是800，关闭需要显式设置为0 */
-            /* filter-reverse-as-codir = <0>;  转动过程中出现的反向信号毛刺处理为正向信号，现在默认值是0 - 关闭 */
-            /* filter-codir-guard-us = <3000>;  转动过程中抑制快速连续出现的正向信号的时间窗口，默认值是3000，关闭需要显式设置为0 */
-            /* filter-jump-compensate = <1>;  连续出现的中间信号处理为转动信号 — 这个就是为了处理之前转动2格才动1次的问题，默认值是1，关闭需要显式设置为0 */
-        };
-
-        /* 转动一圈是24个点（detent） */
-
-        sensors {
-            compatible = "zmk,keymap-sensors";
-            sensors = <&left_encoder &right_encoder>;
-            triggers-per-rotation = <24>;   /* 这个跟上面2个steps保持一致 */
-        };
-
     };
 
-};    
+    /*
+     * Encoders: 24 detents per rotation, and this encoder sends 2 pulses per detent.
+     * In upstream ZMK "steps" is the number of pulses per FULL rotation (24 x 2 = 48);
+     * "triggers-per-rotation" below is the number of detents (24). That ratio gives
+     * exactly one trigger per click.
+     */
+    left_encoder: encoder_left {
+        compatible = "alps,ec11";
+        status = "disabled";
+        a-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <48>;
+    };
+
+    right_encoder: encoder_right {
+        compatible = "alps,ec11";
+        status = "disabled";
+        a-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <48>;
+    };
+
+    sensors {
+        compatible = "zmk,keymap-sensors";
+        sensors = <&left_encoder &right_encoder>;
+        triggers-per-rotation = <24>;
+    };
+};
