@@ -62,13 +62,14 @@
         cpi = <400>;
 
         /*
-         * Was CONFIG_PMW3610_ORIENTATION_270 + CONFIG_PMW3610_INVERT_X.
-         * These three flags are my best translation of that. If the ball moves the
-         * cursor in the wrong direction, toggle these lines (see README, "Tuning").
+         * Orientation. Originally translated from CONFIG_PMW3610_ORIENTATION_270 +
+         * CONFIG_PMW3610_INVERT_X as "swap-xy + invert-x + invert-y", which moved the
+         * cursor the wrong way on both axes. Removing both inversions fixes that.
+         *   - only horizontal reversed: add "invert-x;"
+         *   - only vertical reversed:   add "invert-y;"
+         *   - axes swapped (left/right moves it up/down): remove "swap-xy;"
          */
         swap-xy;
-        invert-x;
-        invert-y;
 
         evt-type = <INPUT_EV_REL>;
         x-input-code = <INPUT_REL_X>;
@@ -97,17 +98,34 @@
             codes = <INPUT_REL_HWHEEL>;
             track-remainders;
         };
+
+        /* Same idea for pointer movement, used by the hold-T slow mode below. */
+        zip_x_scaler_tr: zip_x_scaler_tr {
+            compatible = "zmk,input-processor-scaler";
+            #input-processor-cells = <2>;
+            type = <INPUT_EV_REL>;
+            codes = <INPUT_REL_X>;
+            track-remainders;
+        };
+
+        zip_y_scaler_tr: zip_y_scaler_tr {
+            compatible = "zmk,input-processor-scaler";
+            #input-processor-cells = <2>;
+            type = <INPUT_EV_REL>;
+            codes = <INPUT_REL_Y>;
+            track-remainders;
+        };
     };
 
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
 
-        /* Layer 3 (hold F): ball movement becomes mouse-wheel notches.
+        /* Layer 4 (not reachable by any key yet): ball movement becomes mouse-wheel notches.
            "1 16" = 1 notch per 16 counts of ball movement. Raise the 16 (max 16 per
            stage) or add a second scaler to slow it further; lower it to speed up. */
         scroll {
-            layers = <3>;
+            layers = <4>;
             input-processors = <
                 &zip_xy_to_scroll_mapper
                 &zip_wheel_scaler_tr 1 16
@@ -115,10 +133,15 @@
             >;
         };
 
-        /* Layer 4: slow, precise pointer (no key currently switches to this layer). */
+        /* Layer 5 (hold T): slow, precise pointer. "1 4" = a quarter of normal speed.
+           Change the 4 (up to 16) for slower, or lower it for faster. Keep the X and Y
+           values the same. */
         snipe {
-            layers = <4>;
-            input-processors = <&zip_xy_scaler 1 2>;
+            layers = <5>;
+            input-processors = <
+                &zip_x_scaler_tr 1 4
+                &zip_y_scaler_tr 1 4
+            >;
         };
     };
 };
