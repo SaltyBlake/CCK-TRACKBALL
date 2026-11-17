@@ -52,7 +52,7 @@
      * Layers:
      *   0 QWERTY       base layer
      *   1 F_layers     hold F : number row becomes F1-F12
-     *   2 D_layers     hold D : Backspace -> Delete, "/" key -> Up arrow
+     *   2 D_layers     hold D : 9 -> - and _, 0 -> = and +, Backspace -> Delete, "/" key -> Up arrow
      *   3 BT_layers    hold B : Bluetooth profile select / clear
      *   4 scroll-layers  not reachable yet (all transparent); trackball scroll mode lives here
      *   5 snipe-layers   hold T : trackball moves slowly for precision (all keys transparent)
@@ -87,10 +87,10 @@
 
         D_layers {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans       &kp DELETE
+&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp MINUS  &kp EQUAL  &kp DELETE
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans       &trans
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans       &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp UP_ARROW &trans
+&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp UP_ARROW &kp RIGHT_SHIFT
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans       &trans
             >;
             sensor-bindings = <&scroll_encoder &scroll_encoder>;
